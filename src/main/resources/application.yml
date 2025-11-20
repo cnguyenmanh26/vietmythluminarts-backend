@@ -1,0 +1,236 @@
+# ========================================
+# VIETMYTHLUMINARTS BACKEND CONFIGURATION
+# Spring Boot 3.x Application
+# ========================================
+
+spring:
+  application:
+    name: vietmythluminarts-backend
+
+  # ========== MONGODB CONFIGURATION ==========
+  data:
+    mongodb:
+      # MongoDB Connection String
+      # IMPORTANT: Your MONGODB_URI from .env doesn't include database name
+      # Spring Boot will use the database name from the connection string
+      # If no database name is specified, it will use "test" by default
+      # 
+      # To specify database name, add it before the query parameters:
+      # mongodb+srv://...@cluster.net/DATABASE_NAME?retryWrites=...
+      # 
+      # You can set MONGODB_URI environment variable with full connection string including database name
+      # Or update the default value below - replace YOUR_DB_NAME with actual database name
+      uri: ${MONGODB_URI:mongodb+srv://thainhhe172393_db_user:thainh@woodtoyscluster.macrkrc.mongodb.net/?retryWrites=true&w=majority&appName=WoodToysCluster}
+      
+      # IMPORTANT: Auto-index creation is DISABLED
+      # This prevents Spring from automatically creating indexes based on @Indexed annotations
+      # Your existing MongoDB Atlas database structure will remain unchanged
+      # Only data operations (CRUD) will be performed
+      auto-index-creation: false
+      
+      # Alternative individual configuration (comment out if using uri)
+      # host: ${MONGODB_HOST:localhost}
+      # port: ${MONGODB_PORT:27017}
+      # database: ${MONGODB_DATABASE:vietmythluminarts}
+      # username: ${MONGODB_USERNAME:}
+      # password: ${MONGODB_PASSWORD:}
+      # authentication-database: admin
+
+  # ========== FILE UPLOAD CONFIGURATION ==========
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB        # Maximum file size per file
+      max-request-size: 20MB     # Maximum total request size
+      file-size-threshold: 2MB   # Threshold for storing in memory vs disk
+
+  # ========== JACKSON CONFIGURATION ==========
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+      fail-on-empty-beans: false
+    deserialization:
+      fail-on-unknown-properties: false
+    time-zone: Asia/Ho_Chi_Minh
+
+  # ========== EMAIL CONFIGURATION ==========
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_PASSWORD:your-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+# ========== JWT CONFIGURATION ==========
+jwt:
+  # JWT Secret Key (MUST be at least 256 bits / 32 characters for HS256)
+  # IMPORTANT: Use environment variable in production!
+  # From .env: JWT_ACCESS_SECRET
+  secret: ${JWT_ACCESS_SECRET:kGh5u3@^zP!qR9sWv8yB*E(H+MbQeThW}
+  
+  # JWT Access Token Expiration (in milliseconds)
+  # From .env: JWT_ACCESS_EXPIRE=15m (15 minutes = 900000ms)
+  # Default: 15 minutes = 900000ms
+  expiration: ${JWT_EXPIRATION:900000}
+  
+  # Refresh Token Configuration
+  refresh-token:
+    # Refresh Token Expiration (in milliseconds)
+    # From .env: JWT_REFRESH_EXPIRE_DAYS=7 (7 days = 604800000ms)
+    # Default: 7 days = 604800000ms
+    expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+# ========== CLOUDINARY CONFIGURATION ==========
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:dbaj4wc5p}
+  api-key: ${CLOUDINARY_API_KEY:163499953583521}
+  api-secret: ${CLOUDINARY_API_SECRET:o9bSjQVuZ44Hl8sLKECDcwYGZ0I}
+  secure: true
+
+# ========== GOOGLE OAUTH CONFIGURATION ==========
+google:
+  client-id: ${GOOGLE_CLIENT_ID:848882591213-8es5a1dje32ugc4i675me93j6lpg3gan.apps.googleusercontent.com}
+
+# ========== APPLICATION CONFIGURATION ==========
+app:
+  frontend-url: ${FRONTEND_URL:${CORS_ORIGIN:http://localhost:5173}}
+  cors-origin: ${CORS_ORIGIN:http://localhost:5173}
+
+# ========== LOGGING CONFIGURATION ==========
+logging:
+  level:
+    root: INFO
+    com.social.vietmythluminarts: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.springframework.data.mongodb: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/application.log
+    max-size: 10MB
+    max-history: 30
+
+# ========== SERVER CONFIGURATION ==========
+server:
+  port: ${PORT:5000}
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+# ========== SPRINGDOC / SWAGGER CONFIGURATION ==========
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+  show-actuator: false
+
+# ========== ACTUATOR CONFIGURATION ==========
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    mongo:
+      enabled: true
+
+# ========================================
+# PROFILE-SPECIFIC CONFIGURATIONS
+# ========================================
+
+---
+# ========== DEVELOPMENT PROFILE ==========
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/vietmythluminarts_dev
+
+logging:
+  level:
+    com.social.vietmythluminarts: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+
+server:
+  port: 8080
+
+---
+# ========== PRODUCTION PROFILE ==========
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+
+logging:
+  level:
+    root: WARN
+    com.social.vietmythluminarts: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-stacktrace: never
+    include-exception: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+---
+# ========== TEST PROFILE ==========
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/vietmythluminarts_test
+
+logging:
+  level:
+    root: ERROR
+    com.social.vietmythluminarts: DEBUG
+
+server:
+  port: 8081
+
