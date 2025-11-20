@@ -88,18 +88,21 @@ public class CloudinaryService {
 
         Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(), uploadParams);
         
-        // Generate thumbnail URL (at 1 second)
+        // Generate thumbnail URL
         String publicId = (String) uploadResult.get("public_id");
         
-        // Build transformation for video thumbnail using transformation string
-        // Format: "w_400,c_scale,so_1" 
-        // w_400 = width 400px, c_scale = crop scale, so_1 = start_offset 1 second
-        String transformationString = "w_400,c_scale,so_1";
+        // Build transformation for video thumbnail
+        // Resize to 400px width, crop scale
+        // Cloudinary will automatically extract a frame from the video
+        // For specific frame extraction, we can add start_offset later if needed
+        Transformation thumbnailTransformation = new Transformation()
+                .width(400)
+                .crop("scale");
         
         String thumbnailUrl = cloudinary.url()
                 .resourceType("video")
                 .format("jpg")
-                .transformation(new Transformation().rawTransformation(transformationString))
+                .transformation(thumbnailTransformation)
                 .generate(publicId);
 
         log.debug("Video uploaded successfully: {}", publicId);

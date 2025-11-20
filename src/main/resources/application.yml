@@ -11,16 +11,14 @@ spring:
   data:
     mongodb:
       # MongoDB Connection String
-      # IMPORTANT: Your MONGODB_URI from .env doesn't include database name
-      # Spring Boot will use the database name from the connection string
-      # If no database name is specified, it will use "test" by default
+      # IMPORTANT: Set MONGODB_URI environment variable with your connection string
+      # Format: mongodb+srv://username:password@cluster.net/DATABASE_NAME?retryWrites=true&w=majority
       # 
-      # To specify database name, add it before the query parameters:
-      # mongodb+srv://...@cluster.net/DATABASE_NAME?retryWrites=...
+      # For local development (default):
+      # mongodb://localhost:27017/vietmythluminarts
       # 
-      # You can set MONGODB_URI environment variable with full connection string including database name
-      # Or update the default value below - replace YOUR_DB_NAME with actual database name
-      uri: ${MONGODB_URI:mongodb+srv://thainhhe172393_db_user:thainh@woodtoyscluster.macrkrc.mongodb.net/?retryWrites=true&w=majority&appName=WoodToysCluster}
+      # For production: Set MONGODB_URI environment variable
+      uri: ${MONGODB_URI:mongodb://localhost:27017/vietmythluminarts}
       
       # IMPORTANT: Auto-index creation is DISABLED
       # This prevents Spring from automatically creating indexes based on @Indexed annotations
@@ -74,9 +72,9 @@ spring:
 # ========== JWT CONFIGURATION ==========
 jwt:
   # JWT Secret Key (MUST be at least 256 bits / 32 characters for HS256)
-  # IMPORTANT: Use environment variable in production!
-  # From .env: JWT_ACCESS_SECRET
-  secret: ${JWT_ACCESS_SECRET:kGh5u3@^zP!qR9sWv8yB*E(H+MbQeThW}
+  # IMPORTANT: Set JWT_ACCESS_SECRET environment variable in production!
+  # DO NOT hardcode secrets in this file
+  secret: ${JWT_ACCESS_SECRET:change-this-secret-key-in-production-minimum-32-characters}
   
   # JWT Access Token Expiration (in milliseconds)
   # From .env: JWT_ACCESS_EXPIRE=15m (15 minutes = 900000ms)
@@ -92,14 +90,17 @@ jwt:
 
 # ========== CLOUDINARY CONFIGURATION ==========
 cloudinary:
-  cloud-name: ${CLOUDINARY_CLOUD_NAME:dbaj4wc5p}
-  api-key: ${CLOUDINARY_API_KEY:163499953583521}
-  api-secret: ${CLOUDINARY_API_SECRET:o9bSjQVuZ44Hl8sLKECDcwYGZ0I}
+  # IMPORTANT: Set these environment variables in production
+  # CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:your_cloud_name}
+  api-key: ${CLOUDINARY_API_KEY:your_api_key}
+  api-secret: ${CLOUDINARY_API_SECRET:your_api_secret}
   secure: true
 
 # ========== GOOGLE OAUTH CONFIGURATION ==========
 google:
-  client-id: ${GOOGLE_CLIENT_ID:848882591213-8es5a1dje32ugc4i675me93j6lpg3gan.apps.googleusercontent.com}
+  # IMPORTANT: Set GOOGLE_CLIENT_ID environment variable in production
+  client-id: ${GOOGLE_CLIENT_ID:your_google_client_id}
 
 # ========== APPLICATION CONFIGURATION ==========
 app:
