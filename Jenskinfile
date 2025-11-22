@@ -1,1 +1,118 @@
-Jenskinfile
+pipeline {
+    agent any
+
+    // Cấu hình tools đã cài trong Global Tool Configuration
+    tools {
+        maven 'Maven' 
+        jdk 'JDK17'
+    }
+
+    environment {
+        // Thông tin Docker Image
+        REGISTRY_USER = 'your-dockerhub-username'
+        IMAGE_NAME = 'spring-boot-backend'
+        DOCKER_TAG = "${BUILD_NUMBER}" // Hoặc dùng 'latest'
+        
+        // Thông tin Server Deploy
+        DEPLOY_SERVER_IP = '103.101.162.139'
+        DEPLOY_USER = 'root'
+    }
+
+    stages {
+        // 1. Checkout Code từ Git (Tự động, nhưng có thể custom)
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+                echo 'Checkout completed.'
+            }
+        }
+
+        // 2. Build & Unit Test
+        stage('Build & Unit Test') {
+            steps {
+                echo 'Building application...'
+                // Lệnh Maven package, chạy test nhưng bỏ qua test lỗi nếu muốn (hoặc bỏ -DskipTests để bắt buộc pass)
+                sh 'mvn clean package' 
+            }
+            post {
+                success {
+                    // Lưu lại file JAR/WAR sau khi build
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                    // Lưu lại kết quả test JUnit
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        // 3. Code Quality Check (Tùy chọn - Cần SonarQube)
+        // Bỏ comment nếu bạn có server SonarQube
+        /*
+        stage('SonarQube Analysis') {
+            environment {
+                scannerHome = tool 'SonarScanner'
+            }
+            steps {
+                withSonarQubeEnv('SonarQube-Server') {
+                    sh "${scannerHome}/bin/sonar-scanner"
+                }
+            }
+        }
+        */
+
+        // 4. Build Docker Image
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo 'Building Docker Image...'
+                    // Giả sử bạn có Dockerfile ở thư mục gốc
+                    dockerImage = docker.build("${REGISTRY_USER}/${IMAGE_NAME}:${DOCKER_TAG}")
+                }
+            }
+        }
+
+        // 5. Push Docker Image lên Registry (Docker Hub)
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    echo 'Pushing Docker Image to Docker Hub...'
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        dockerImage.push()
+                        dockerImage.push("latest") // Push thêm tag latest
+                    }
+                }
+            }
+        }
+
+        // 6. Deploy (Ví dụ dùng SSH để pull và run trên server đích)
+        stage('Deploy to Server') {
+            steps {
+                echo 'Deploying to production server...'
+                sshagent(['ssh-deploy-creds']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER_IP} '
+                            docker pull ${REGISTRY_USER}/${IMAGE_NAME}:${DOCKER_TAG}
+                            docker stop ${IMAGE_NAME} || true
+                            docker rm ${IMAGE_NAME} || true
+                            docker run -d --name ${IMAGE_NAME} -p 8080:8080 ${REGISTRY_USER}/${IMAGE_NAME}:${DOCKER_TAG}
+                        '
+                    """
+                }
+            }
+        }
+    }
+
+    // Thông báo kết quả pipeline
+    post {
+        always {
+            cleanWs() // Dọn dẹp workspace
+        }
+        success {
+            echo 'Pipeline executed successfully!'
+            // Có thể thêm plugin Slack/Email Notification tại đây
+        }
+        failure {
+            echo 'Pipeline failed. Please check logs.'
+        }
+    }
+}
